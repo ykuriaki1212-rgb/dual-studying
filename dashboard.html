@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ダブル受験 進捗ダッシュボード 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    
+    body {
+      background-color: #fafaf9;
+      min-height: 100vh;
+    }
+    
+    .header {
+      background: linear-gradient(to right, #1e293b, #334155, #1e293b);
+      color: white;
+      padding: 2rem 1.5rem;
+    }
+    
+    .header-content {
+      max-width: 80rem;
+      margin: 0 auto;
+    }
+    
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .header-icon {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 0.5rem;
+      background-color: #f59e0b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+    
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    
+    .header-sub {
+      color: #cbd5e1;
+      font-size: 0.875rem;
+    }
+    
+    /* 同期ステータス */
+    .sync-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(255,255,255,0.1);
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .sync-status:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .sync-indicator {
+      width: 0.625rem;
+      height: 0.625rem;
+      border-radius: 50%;
+      background-color: #94a3b8;
+    }
+    
+    .sync-indicator.syncing {
+      background-color: #fbbf24;
+      animation: pulse 1s infinite;
+    }
+    
+    .sync-indicator.synced {
+      background-color: #22c55e;
+    }
+    
+    .sync-indicator.error {
+      background-color: #ef4444;
+    }
+    
+    .sync-indicator.offline {
+      background-color: #94a3b8;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .container {
+      max-width: 80rem;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    
+    .countdown-section {
+      margin-top: -1rem;
+    }
+    
+    .countdown-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    @media (min-width: 768px) {
+      .countdown-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    .countdown-card {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      border: 1px solid #e2e8f0;
+      padding: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .countdown-card .bg-circle {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 8rem;
+      height: 8rem;
+      border-radius: 50%;
+      transform: translate(50%, -50%);
+    }
+    
+    .countdown-card.blue .bg-circle { background-color: rgba(37, 99, 235, 0.1); }
+    .countdown-card.green .bg-circle { background-color: rgba(5, 150, 105, 0.1); }
+    
+    .countdown-card .content { position: relative; }
+    
+    .badge-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .badge {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border-radius: 0.25rem;
+    }
+    
+    .badge.blue { background-color: #dbeafe; color: #1d4ed8; }
+    .badge.green { background-color: #d1fae5; color: #047857; }
+    
+    .date-text { color: #64748b; font-size: 0.875rem; }
+    
+    .exam-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 0.25rem;
+    }
+    
+    .days-display {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+    
+    .days-number { font-size: 3rem; font-weight: 900; }
+    .days-number.blue { color: #2563eb; }
+    .days-number.green { color: #059669; }
+    .days-label { color: #64748b; }
+    
+    .progress-section { margin-top: 1rem; }
+    
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .progress-label { color: #475569; }
+    .progress-value { font-weight: 600; }
+    .progress-value.blue { color: #2563eb; }
+    .progress-value.green { color: #059669; }
+    
+    .progress-bar {
+      height: 0.5rem;
+      background-color: #f1f5f9;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 0.5s ease;
+    }
+    
+    .progress-fill.blue { background: linear-gradient(to right, #3b82f6, #60a5fa); }
+    .progress-fill.green { background: linear-gradient(to right, #10b981, #34d399); }
+    
+    .phase-banner {
+      margin-top: 1.5rem;
+      background: linear-gradient(to right, #fffbeb, #fff7ed);
+      border: 1px solid #fde68a;
+      border-radius: 0.75rem;
+      padding: 1rem;
+    }
+    
+    .phase-content {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    
+    .phase-dot {
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    
+    .phase-text strong { color: #1e293b; }
+    .phase-name { color: #334155; margin-left: 0.5rem; }
+    .phase-desc { color: #64748b; font-size: 0.875rem; margin-left: 0.5rem; }
+    
+    .main-content { padding: 2rem 0; }
+    
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    
+    @media (min-width: 1024px) {
+      .main-grid { grid-template-columns: 2fr 1fr; }
+    }
+    
+    .card {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      border: 1px solid #e2e8f0;
+      padding: 1.5rem;
+    }
+    
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .card-icon {
+      width: 2rem;
+      height: 2rem;
+      background-color: #f1f5f9;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .phase-legend {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+    }
+    
+    .legend-dot {
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 50%;
+    }
+    
+    .timeline-container {
+      position: relative;
+    }
+    
+    .timeline-item {
+      position: relative;
+      padding-left: 2rem;
+      padding-bottom: 1.5rem;
+      border-left: 2px solid #e2e8f0;
+    }
+    
+    .timeline-dot {
+      position: absolute;
+      left: -0.5rem;
+      top: 0;
+      width: 1rem;
+      height: 1rem;
+      border-radius: 50%;
+      border: 3px solid;
+      background-color: white;
+    }
+    
+    .timeline-dot.exam {
+      width: 1.25rem;
+      height: 1.25rem;
+      left: -0.625rem;
+    }
+    
+    .timeline-content {
+      background-color: #f8fafc;
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .timeline-content.exam {
+      background-color: #fef3c7;
+      border-color: #fcd34d;
+    }
+    
+    .timeline-month {
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 0.25rem;
+    }
+    
+    .timeline-tasks {
+      list-style: none;
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+    
+    .timeline-tasks li { margin-bottom: 0.125rem; }
+    .timeline-tasks li.highlight { color: #dc2626; font-weight: 600; }
+    
+    .review-section { margin-top: 1.5rem; }
+    
+    .review-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .review-month {
+      width: 3rem;
+      font-weight: 500;
+      color: #475569;
+    }
+    
+    .review-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .review-btn {
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border: 1px solid #d1d5db;
+      background-color: white;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .review-btn:hover {
+      background-color: #f3f4f6;
+    }
+    
+    .review-btn.completed {
+      background-color: #059669;
+      border-color: #059669;
+      color: white;
+    }
+    
+    .review-btn.l3 {
+      border-color: #f59e0b;
+      color: #f59e0b;
+    }
+    
+    .review-btn.l3.completed {
+      background-color: #f59e0b;
+      border-color: #f59e0b;
+      color: white;
+    }
+    
+    .tab-container {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .tab-btn {
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 500;
+      border: 1px solid #e2e8f0;
+      background-color: white;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .tab-btn.active-blue {
+      background-color: #2563eb;
+      border-color: #2563eb;
+      color: white;
+    }
+    
+    .tab-btn.active-green {
+      background-color: #059669;
+      border-color: #059669;
+      color: white;
+    }
+    
+    .subject-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+    
+    @media (min-width: 640px) {
+      .subject-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    .subject-card {
+      background-color: #f8fafc;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .subject-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    
+    .subject-name {
+      font-weight: 500;
+      color: #334155;
+      font-size: 0.875rem;
+    }
+    
+    .subject-count {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+    
+    .subject-progress {
+      height: 0.375rem;
+      background-color: #e2e8f0;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+    
+    .subject-fill {
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 0.3s ease;
+    }
+    
+    .subject-fill.blue { background: linear-gradient(to right, #3b82f6, #60a5fa); }
+    .subject-fill.green { background: linear-gradient(to right, #10b981, #34d399); }
+    
+    .subject-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .subject-btn {
+      flex: 1;
+      padding: 0.375rem;
+      border-radius: 0.375rem;
+      font-weight: 600;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .subject-btn.minus {
+      background-color: #fee2e2;
+      color: #dc2626;
+    }
+    
+    .subject-btn.minus:hover { background-color: #fecaca; }
+    
+    .subject-btn.plus-blue {
+      background-color: #dbeafe;
+      color: #2563eb;
+    }
+    
+    .subject-btn.plus-blue:hover { background-color: #bfdbfe; }
+    
+    .subject-btn.plus-green {
+      background-color: #d1fae5;
+      color: #059669;
+    }
+    
+    .subject-btn.plus-green:hover { background-color: #a7f3d0; }
+    
+    .schedule-section {
+      margin-top: 2rem;
+    }
+    
+    .schedule-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    @media (min-width: 768px) {
+      .schedule-grid { grid-template-columns: 1fr 1fr; }
+    }
+    
+    .schedule-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background-color: #f8fafc;
+      border-radius: 0.5rem;
+      border-left: 3px solid;
+    }
+    
+    .schedule-item.blue { border-left-color: #2563eb; }
+    .schedule-item.green { border-left-color: #059669; }
+    
+    .schedule-day {
+      font-weight: 600;
+      color: #334155;
+      min-width: 4rem;
+    }
+    
+    .schedule-task {
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+    
+    .tips-box {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-radius: 0.75rem;
+      padding: 1rem;
+    }
+    
+    .tips-title {
+      font-weight: 600;
+      color: #92400e;
+      margin-bottom: 0.5rem;
+    }
+    
+    .tips-list {
+      list-style: none;
+      font-size: 0.875rem;
+      color: #78350f;
+    }
+    
+    .tips-list li { margin-bottom: 0.25rem; }
+    
+    .footer {
+      background-color: #1e293b;
+      color: #94a3b8;
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.875rem;
+    }
+    
+    .footer .small {
+      font-size: 0.75rem;
+      margin-top: 0.5rem;
+      color: #64748b;
+    }
+    
+    /* ローディングオーバーレイ */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    
+    .loading-overlay.hidden {
+      display: none;
+    }
+    
+    .loading-spinner {
+      width: 3rem;
+      height: 3rem;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #f59e0b;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* トースト通知 */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0.75rem 1.5rem;
+      background: #1e293b;
+      color: white;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    
+    .toast.show {
+      opacity: 1;
+    }
+    
+    .toast.success { background: #059669; }
+    .toast.error { background: #dc2626; }
+    
+    /* 設定モーダル */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+    
+    .modal-overlay.hidden {
+      display: none;
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 1rem;
+    }
+    
+    .modal-input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+    
+    .modal-input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    
+    .modal-buttons {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+    
+    .modal-btn {
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .modal-btn.cancel {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      color: #64748b;
+    }
+    
+    .modal-btn.save {
+      background: #2563eb;
+      border: none;
+      color: white;
+    }
+    
+    .modal-btn:hover {
+      opacity: 0.9;
+    }
+    
+    .modal-hint {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-bottom: 1rem;
+    }
+    
+    /* YouTube セクション */
+    .youtube-section {
+      padding-bottom: 2rem;
+    }
+    
+    .youtube-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    
+    .youtube-card {
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      border-left: 4px solid;
+    }
+    
+    .youtube-card.blue {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border-left-color: #2563eb;
+    }
+    
+    .youtube-card.green {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border-left-color: #059669;
+    }
+    
+    .youtube-title {
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .youtube-card.blue .youtube-title { color: #1e40af; }
+    .youtube-card.green .youtube-title { color: #047857; }
+    
+    .youtube-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      color: white;
+    }
+    
+    .youtube-card.blue .youtube-badge { background: #2563eb; }
+    .youtube-card.green .youtube-badge { background: #059669; }
+    
+    .youtube-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    .youtube-link {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      padding: 0.5rem;
+      background: white;
+      border-radius: 0.5rem;
+      transition: all 0.2s;
+    }
+    
+    .youtube-card.blue .youtube-link { color: #1e40af; }
+    .youtube-card.green .youtube-link { color: #047857; }
+    
+    .youtube-link:hover {
+      transform: translateX(4px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .youtube-play {
+      color: #ef4444;
+      font-size: 1.25rem;
+    }
+    
+    .youtube-name {
+      font-weight: 500;
+    }
+    
+    .youtube-desc {
+      color: #64748b;
+      font-size: 0.75rem;
+      margin-left: auto;
+    }
+    
+    .youtube-tip {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: #fef3c7;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      color: #92400e;
+    }
+  </style>
+</head>
+<body>
+  <!-- ローディングオーバーレイ -->
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="loading-spinner"></div>
+  </div>
+  
+  <!-- トースト通知 -->
+  <div id="toast" class="toast"></div>
+  
+  <!-- 設定モーダル -->
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h3 class="modal-title">⚙️ API設定</h3>
+      <p class="modal-hint">
+        Google Apps ScriptのウェブアプリURLを設定してください。<br>
+        未設定の場合はローカルモードで動作します。
+      </p>
+      <input type="text" id="api-url-input" class="modal-input" placeholder="https://script.google.com/macros/s/xxxxx/exec">
+      <div class="modal-buttons">
+        <button class="modal-btn cancel" onclick="closeSettingsModal()">キャンセル</button>
+        <button class="modal-btn save" onclick="saveApiUrl()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div class="header-top">
+        <div>
+          <div class="header-title">
+            <div class="header-icon">📚</div>
+            <h1>ダブル受験 進捗ダッシュボード</h1>
+          </div>
+          <p class="header-sub">社労士試験 & 行政書士試験 2026年合格を目指して</p>
+        </div>
+        <div class="sync-status" id="sync-status" onclick="openSettingsModal()" title="クリックして設定を開く">
+          <div class="sync-indicator" id="sync-indicator"></div>
+          <span id="sync-text">接続確認中...</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Countdown Cards -->
+  <div class="container countdown-section">
+    <div class="countdown-grid">
+      <div class="countdown-card blue">
+        <div class="bg-circle"></div>
+        <div class="content">
+          <div class="badge-row">
+            <span class="badge blue">第1目標</span>
+            <span class="date-text">2026年8月23日（日）</span>
+          </div>
+          <div class="exam-name">社会保険労務士試験</div>
+          <div class="days-display">
+            <span class="days-number blue" id="sharoushi-days">---</span>
+            <span class="days-label">日</span>
+          </div>
+          <div class="progress-section">
+            <div class="progress-header">
+              <span class="progress-label">学習進捗</span>
+              <span class="progress-value blue" id="sharoushi-percent">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill blue" id="sharoushi-bar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="countdown-card green">
+        <div class="bg-circle"></div>
+        <div class="content">
+          <div class="badge-row">
+            <span class="badge green">第2目標</span>
+            <span class="date-text">2026年11月8日（日）</span>
+          </div>
+          <div class="exam-name">行政書士試験</div>
+          <div class="days-display">
+            <span class="days-number green" id="gyousei-days">---</span>
+            <span class="days-label">日</span>
+          </div>
+          <div class="progress-section">
+            <div class="progress-header">
+              <span class="progress-label">学習進捗</span>
+              <span class="progress-value green" id="gyousei-percent">0%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill green" id="gyousei-bar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="phase-banner">
+      <div class="phase-content">
+        <div class="phase-dot" id="phase-dot"></div>
+        <span class="phase-text"><strong>現在のフェーズ:</strong></span>
+        <span class="phase-name" id="phase-name">---</span>
+        <span class="phase-desc" id="phase-desc"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container main-content">
+    <div class="main-grid">
+      <!-- Left Column -->
+      <div>
+        <!-- Timeline Card -->
+        <div class="card">
+          <h3 class="card-title">
+            <span class="card-icon">🗓️</span>
+            12ヶ月学習ロードマップ
+          </h3>
+          
+          <div class="phase-legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background-color: #2563eb;"></div>
+              <span>社労士集中期</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background-color: #dc2626;"></div>
+              <span>社労士直前期</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background-color: #059669;"></div>
+              <span>行政書士集中期</span>
+            </div>
+          </div>
+          
+          <div class="timeline-container" id="timeline"></div>
+        </div>
+        
+        <!-- Subject Progress Card -->
+        <div class="card" style="margin-top: 1.5rem;">
+          <h3 class="card-title">
+            <span class="card-icon">📊</span>
+            科目別 周回進捗
+          </h3>
+          
+          <div class="tab-container">
+            <button class="tab-btn active-blue" id="tab-sharoushi" onclick="switchTab('sharoushi')">社労士</button>
+            <button class="tab-btn" id="tab-gyousei" onclick="switchTab('gyousei')">行政書士</button>
+          </div>
+          
+          <div class="subject-grid" id="subject-grid"></div>
+        </div>
+      </div>
+      
+      <!-- Right Column -->
+      <div>
+        <!-- Review Tracker Card -->
+        <div class="card">
+          <h3 class="card-title">
+            <span class="card-icon">✅</span>
+            行政書士 月次レビュートラッカー
+          </h3>
+          <p style="font-size: 0.875rem; color: #64748b; margin-bottom: 1rem;">
+            L1=憲法・行政法基礎 / L2=民法・商法 / L3=問題演習
+          </p>
+          <div class="review-section" id="review-tracker"></div>
+        </div>
+        
+        <!-- Schedule Card -->
+        <div class="card" style="margin-top: 1.5rem;">
+          <h3 class="card-title">
+            <span class="card-icon">⏰</span>
+            推奨ウィークリースケジュール（社労士集中期）
+          </h3>
+          <div class="schedule-grid">
+            <div>
+              <div class="schedule-item blue">
+                <span class="schedule-day">平日</span>
+                <span class="schedule-task">社労士のみ集中</span>
+              </div>
+              <div class="schedule-item green">
+                <span class="schedule-day">第1日曜</span>
+                <span class="schedule-task">午前：社労士 / 午後：行書L1復習</span>
+              </div>
+              <div class="schedule-item green">
+                <span class="schedule-day">第3日曜</span>
+                <span class="schedule-task">午前：社労士 / 午後：行書L2復習</span>
+              </div>
+            </div>
+            <div class="tips-box">
+              <p class="tips-title">📌 効率化のコツ</p>
+              <ul class="tips-list">
+                <li>• 通勤時間にテキストPDFを流し見</li>
+                <li>• 音声講義は1.5-2倍速で聴く</li>
+                <li>• 細かい論点は追わない</li>
+                <li>• 新しいテキストは買わない</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- YouTube おすすめチャンネル -->
+  <div class="container youtube-section">
+    <div class="card">
+      <h3 class="card-title">
+        <span class="card-icon">📺</span>
+        おすすめ YouTube チャンネル
+      </h3>
+      
+      <div class="youtube-grid">
+        <!-- 社労士試験 YouTube -->
+        <div class="youtube-card blue">
+          <h4 class="youtube-title">
+            <span class="youtube-badge">社労士</span>
+            社労士試験 人気チャンネル
+          </h4>
+          <ul class="youtube-list">
+            <li>
+              <a href="https://www.youtube.com/@agaroot_sharoushi" target="_blank" rel="noopener" class="youtube-link">
+                <span class="youtube-play">▶</span>
+                <span class="youtube-name">アガルート【社労士】最短ルートTV</span>
+                <span class="youtube-desc">聞き流し・攻略法</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://www.youtube.com/@foresight_sharoushi" target="_blank" rel="noopener" class="youtube-link">
+                <span class="youtube-play">▶</span>
+                <span class="youtube-name">フォーサイト 社労士 大大チャンネル</span>
+                <span class="youtube-desc">過去問解説</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://www.youtube.com/@sharoushi24" target="_blank" rel="noopener" class="youtube-link">
+                <span class="youtube-play">▶</span>
+                <span class="youtube-name">資格の大原 社労士24（金沢先生）</span>
+                <span class="youtube-desc">10点アップ講座</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://www.youtube.com/@LECsharoushi" target="_blank" rel="noopener" class="youtube-link">
+                <span class="youtube-play">▶</span>
+                <span class="youtube-name">LEC東京リーガルマインド 社労士</span>
+                <span class="youtube-desc">科目別講義</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://www.youtube.com/@takedasan_sharoushi" target="_blank" rel="noopener" class="youtube-link">
+                <span class="youtube-play">▶</span>
+                <span class="youtube-name">たけださん社労士チャンネル</span>
+                <span class="youtube-desc">本質理解</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+        
+        <!-- 行政書士試験 YouTube -->
+        <div class="youtube-card green">
+          <h4 class="youtube-title">
+            <span class="youtube-badge">行書</span>
+            行政書士試験 人気チャンネル
+          </h4>
+          <ul class="youtube-list">
+            <li>
+              <a href="https://www.youtube.com/@yuki_gyosei" target="_blank" rel="noopener" class="youtube-link">
+                <span class="youtube-play">▶</span>
+                <span class="youtube-name">ゆーき大学【行政書士講座】</span>
+                <span class="youtube-desc">行政法・民法</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://www.youtube.com/@agaroot_gyosei" target="_blank" rel="noopener" class="youtube-link">
+                <span class="youtube-play">▶</span>
+                <span class="youtube-name">アガルート【行政書士】最短ルートTV</span>
+                <span class="youtube-desc">豊村講師</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://www.youtube.com/@itojuku_gyosei" target="_blank" rel="noopener" class="youtube-link">
+                <span class="youtube-play">▶</span>
+                <span class="youtube-name">伊藤塾 行政書士試験科</span>
+                <span class="youtube-desc">民法基礎</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://www.youtube.com/@shikaku_square" target="_blank" rel="noopener" class="youtube-link">
+                <span class="youtube-play">▶</span>
+                <span class="youtube-name">資格スクエア（森T）</span>
+                <span class="youtube-desc">固い法律をやわらかく</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://www.youtube.com/@gyosei_satou" target="_blank" rel="noopener" class="youtube-link">
+                <span class="youtube-play">▶</span>
+                <span class="youtube-name">行政書士 佐藤浩一先生</span>
+                <span class="youtube-desc">過去問反復</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      
+      <p class="youtube-tip">
+        💡 <strong>活用のコツ：</strong>通勤時間は聞き流し動画、休日は講義動画を1.5〜2倍速で視聴すると効率的です！
+      </p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>2026年ダブル合格を目指して 🎯 頑張りましょう！</p>
+    <p class="small">※ 進捗データはGoogleスプレッドシートに自動保存されます（オフライン時はローカル保存）</p>
+  </footer>
+
+  <script>
+    // ===== API設定 =====
+    // ローカルストレージからAPIのURLを取得（なければ空文字）
+    let API_URL = localStorage.getItem('dashboard_api_url') || '';
+    
+    // ===== データ定義 =====
+    const studyData = {
+      sharoushi: {
+        subjects: [
+          { id: 'sr1', name: '労働基準法', target: 10 },
+          { id: 'sr2', name: '労働安全衛生法', target: 8 },
+          { id: 'sr3', name: '労働者災害補償保険法', target: 8 },
+          { id: 'sr4', name: '雇用保険法', target: 8 },
+          { id: 'sr5', name: '労働保険徴収法', target: 6 },
+          { id: 'sr6', name: '健康保険法', target: 10 },
+          { id: 'sr7', name: '国民年金法', target: 10 },
+          { id: 'sr8', name: '厚生年金保険法', target: 10 },
+          { id: 'sr9', name: '労務管理・一般常識', target: 6 },
+          { id: 'sr10', name: '社会保険・一般常識', target: 6 }
+        ]
+      },
+      gyousei: {
+        subjects: [
+          { id: 'gs1', name: '憲法', target: 5 },
+          { id: 'gs2', name: '行政法総論', target: 5 },
+          { id: 'gs3', name: '行政手続法', target: 5 },
+          { id: 'gs4', name: '行政不服審査法', target: 5 },
+          { id: 'gs5', name: '行政事件訴訟法', target: 5 },
+          { id: 'gs6', name: '国家賠償法・地方自治法', target: 5 },
+          { id: 'gs7', name: '民法', target: 5 },
+          { id: 'gs8', name: '商法・会社法', target: 3 },
+          { id: 'gs9', name: '基礎法学', target: 2 },
+          { id: 'gs10', name: '一般知識', target: 3 }
+        ]
+      }
+    };
+
+    const phases = [
+      { name: '社労士集中期', start: '2025-12-01', end: '2026-06-30', description: '社労士メイン学習 + 行政書士月次復習', color: '#2563eb' },
+      { name: '社労士直前期', start: '2026-07-01', end: '2026-08-23', description: '社労士試験直前対策', color: '#dc2626' },
+      { name: '行政書士集中期', start: '2026-08-24', end: '2026-11-08', description: '行政書士全力投球', color: '#059669' }
+    ];
+
+    const monthlyTasks = [
+      { month: '2025-12', tasks: ['社労士：労働基準法開始', '行政書士：レベル1復習'] },
+      { month: '2026-01', tasks: ['社労士：労働安全衛生法・労災法', '行政書士：レベル1+2復習'] },
+      { month: '2026-02', tasks: ['社労士：雇用保険法・徴収法', '行政書士：レベル1+2復習'] },
+      { month: '2026-03', tasks: ['社労士：健康保険法', '行政書士：レベル3問題演習★'] },
+      { month: '2026-04', tasks: ['社労士：国民年金法', '行政書士：レベル1+2復習'] },
+      { month: '2026-05', tasks: ['社労士：厚生年金保険法', '行政書士：レベル1+2復習'] },
+      { month: '2026-06', tasks: ['社労士：一般常識+総復習', '行政書士：レベル3問題演習★'] },
+      { month: '2026-07', tasks: ['社労士：直前期・模試', '行政書士：一時休止'] },
+      { month: '2026-08', tasks: ['★8/23 社労士試験★', '8/24〜 行政書士再開'] },
+      { month: '2026-09', tasks: ['行政書士：全科目復習', '苦手分野集中対策'] },
+      { month: '2026-10', tasks: ['行政書士：過去問演習', '模試・総仕上げ'] },
+      { month: '2026-11', tasks: ['★11/8 行政書士試験★'] }
+    ];
+
+    const reviewMonths = ['2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06'];
+
+    // ===== 状態管理 =====
+    let progress = {};
+    let reviewLog = {};
+    let selectedExam = 'sharoushi';
+    let isSyncing = false;
+    let syncDebounceTimer = null;
+
+    // ===== 設定モーダル =====
+    function openSettingsModal() {
+      document.getElementById('api-url-input').value = API_URL;
+      document.getElementById('settings-modal').classList.remove('hidden');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settings-modal').classList.add('hidden');
+    }
+
+    function saveApiUrl() {
+      const newUrl = document.getElementById('api-url-input').value.trim();
+      API_URL = newUrl;
+      localStorage.setItem('dashboard_api_url', newUrl);
+      closeSettingsModal();
+      
+      if (newUrl) {
+        showToast('API URLを保存しました。再読み込みします...', 'success');
+        setTimeout(() => {
+          loadFromSpreadsheet();
+        }, 1000);
+      } else {
+        updateSyncStatus('offline', 'ローカルモード');
+        showToast('ローカルモードで動作します', '');
+      }
+    }
+
+    // ===== 同期関連 =====
+    function updateSyncStatus(status, text) {
+      const indicator = document.getElementById('sync-indicator');
+      const textEl = document.getElementById('sync-text');
+      
+      indicator.className = 'sync-indicator ' + status;
+      textEl.textContent = text;
+    }
+
+    function showLoading(show) {
+      const overlay = document.getElementById('loading-overlay');
+      if (show) {
+        overlay.classList.remove('hidden');
+      } else {
+        overlay.classList.add('hidden');
+      }
+    }
+
+    function showToast(message, type = '') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast show ' + type;
+      
+      setTimeout(() => {
+        toast.className = 'toast';
+      }, 3000);
+    }
+
+    function isApiConfigured() {
+      return API_URL && API_URL.startsWith('https://script.google.com/');
+    }
+
+    // スプレッドシートからデータを読み込む
+    async function loadFromSpreadsheet() {
+      if (!isApiConfigured()) {
+        updateSyncStatus('offline', 'ローカルモード（タップで設定）');
+        loadFromLocalStorage();
+        return;
+      }
+
+      try {
+        updateSyncStatus('syncing', '読込中...');
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        const response = await fetch(API_URL, {
+          method: 'GET',
+          redirect: 'follow',
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        const text = await response.text();
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (e) {
+          console.error('JSONパースエラー:', text);
+          throw new Error('レスポンスの解析に失敗しました');
+        }
+        
+        if (result.success && result.data) {
+          progress = result.data.progress || {};
+          reviewLog = result.data.reviewLog || {};
+          
+          // ローカルにもバックアップ
+          saveToLocalStorage();
+          
+          updateSyncStatus('synced', '同期済み');
+          showToast('データを読み込みました', 'success');
+        } else {
+          throw new Error(result.error || '読み込み失敗');
+        }
+      } catch (error) {
+        console.error('スプレッドシート読み込みエラー:', error);
+        
+        if (error.name === 'AbortError') {
+          updateSyncStatus('error', 'タイムアウト');
+        } else {
+          updateSyncStatus('error', '読込エラー');
+        }
+        
+        // エラー時はローカルから読み込む
+        loadFromLocalStorage();
+        showToast('オフラインモードで起動', 'error');
+      }
+      
+      // UI更新
+      updateCountdowns();
+      renderSubjects();
+      renderReviewTracker();
+    }
+
+    // スプレッドシートにデータを保存
+    async function saveToSpreadsheet() {
+      if (!isApiConfigured()) {
+        saveToLocalStorage();
+        return;
+      }
+
+      if (isSyncing) return;
+      isSyncing = true;
+
+      try {
+        updateSyncStatus('syncing', '保存中...');
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: {
+            'Content-Type': 'text/plain'
+          },
+          body: JSON.stringify({
+            progress: progress,
+            reviewLog: reviewLog
+          }),
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        const text = await response.text();
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (e) {
+          console.error('JSONパースエラー:', text);
+          throw new Error('レスポンスの解析に失敗しました');
+        }
+        
+        if (result.success) {
+          updateSyncStatus('synced', '同期済み');
+        } else {
+          throw new Error(result.error || '保存失敗');
+        }
+      } catch (error) {
+        console.error('スプレッドシート保存エラー:', error);
+        updateSyncStatus('error', '保存エラー');
+      }
+      
+      // ローカルにもバックアップ
+      saveToLocalStorage();
+      isSyncing = false;
+    }
+
+    // デバウンス付きの保存（変更のたびに即座にAPIを叩かない）
+    function debouncedSave() {
+      if (syncDebounceTimer) {
+        clearTimeout(syncDebounceTimer);
+      }
+      syncDebounceTimer = setTimeout(() => {
+        saveToSpreadsheet();
+      }, 1000);  // 1秒待ってから保存
+    }
+
+    // ローカルストレージ操作
+    function saveToLocalStorage() {
+      localStorage.setItem('studyProgress', JSON.stringify(progress));
+      localStorage.setItem('reviewLog', JSON.stringify(reviewLog));
+    }
+
+    function loadFromLocalStorage() {
+      progress = JSON.parse(localStorage.getItem('studyProgress') || '{}');
+      reviewLog = JSON.parse(localStorage.getItem('reviewLog') || '{}');
+    }
+
+    // ===== UI更新関数 =====
+    function getDaysUntil(dateStr) {
+      const target = new Date(dateStr);
+      const today = new Date();
+      const diff = target - today;
+      return Math.ceil(diff / (1000 * 60 * 60 * 24));
+    }
+
+    function getProgressPercent(examType) {
+      const subjects = studyData[examType].subjects;
+      const totalTarget = subjects.reduce((sum, s) => sum + s.target, 0);
+      const totalProgress = subjects.reduce((sum, s) => sum + (progress[s.id] || 0), 0);
+      return Math.round((totalProgress / totalTarget) * 100);
+    }
+
+    function getCurrentPhase() {
+      const today = new Date().toISOString().split('T')[0];
+      return phases.find(p => today >= p.start && today <= p.end) || phases[0];
+    }
+
+    function updateCountdowns() {
+      document.getElementById('sharoushi-days').textContent = getDaysUntil('2026-08-23');
+      document.getElementById('gyousei-days').textContent = getDaysUntil('2026-11-08');
+      
+      const sharoushiPercent = getProgressPercent('sharoushi');
+      const gyouseiPercent = getProgressPercent('gyousei');
+      
+      document.getElementById('sharoushi-percent').textContent = sharoushiPercent + '%';
+      document.getElementById('sharoushi-bar').style.width = sharoushiPercent + '%';
+      document.getElementById('gyousei-percent').textContent = gyouseiPercent + '%';
+      document.getElementById('gyousei-bar').style.width = gyouseiPercent + '%';
+    }
+
+    function updatePhase() {
+      const phase = getCurrentPhase();
+      document.getElementById('phase-dot').style.backgroundColor = phase.color;
+      document.getElementById('phase-name').textContent = phase.name;
+      document.getElementById('phase-desc').textContent = '(' + phase.description + ')';
+    }
+
+    function renderTimeline() {
+      const container = document.getElementById('timeline');
+      container.innerHTML = monthlyTasks.map((item, idx) => {
+        const phase = phases.find(p => item.month >= p.start.slice(0, 7) && item.month <= p.end.slice(0, 7));
+        const isExam = item.tasks.some(t => t.includes('★'));
+        const isLast = idx === monthlyTasks.length - 1;
+        
+        return `
+          <div class="timeline-item" style="${isLast ? 'border-left-color: transparent;' : ''}">
+            <div class="timeline-dot ${isExam ? 'exam' : ''}" style="background-color: ${phase?.color || '#94a3b8'}; color: ${phase?.color || '#94a3b8'};"></div>
+            <div class="timeline-content ${isExam ? 'exam' : ''}">
+              <div class="timeline-month">${item.month.replace('-', '年')}月</div>
+              <ul class="timeline-tasks">
+                ${item.tasks.filter(t => t).map(task => 
+                  `<li class="${task.includes('★') ? 'highlight' : ''}">${task}</li>`
+                ).join('')}
+              </ul>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderReviewTracker() {
+      const container = document.getElementById('review-tracker');
+      container.innerHTML = reviewMonths.map(month => {
+        const hasL3 = month === '2026-03' || month === '2026-06';
+        const l1Key = month + '-L1';
+        const l2Key = month + '-L2';
+        const l3Key = month + '-L3';
+        
+        return `
+          <div class="review-row">
+            <span class="review-month">${month.slice(5)}月</span>
+            <div class="review-buttons">
+              <button class="review-btn ${reviewLog[l1Key] ? 'completed' : ''}" onclick="toggleReview('${l1Key}')">L1</button>
+              <button class="review-btn ${reviewLog[l2Key] ? 'completed' : ''}" onclick="toggleReview('${l2Key}')">L2</button>
+              ${hasL3 ? `<button class="review-btn l3 ${reviewLog[l3Key] ? 'completed' : ''}" onclick="toggleReview('${l3Key}')">L3★</button>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleReview(key) {
+      reviewLog[key] = !reviewLog[key];
+      renderReviewTracker();
+      debouncedSave();
+    }
+
+    function renderSubjects() {
+      const container = document.getElementById('subject-grid');
+      const subjects = studyData[selectedExam].subjects;
+      const color = selectedExam === 'sharoushi' ? 'blue' : 'green';
+      
+      container.innerHTML = subjects.map(subject => {
+        const current = progress[subject.id] || 0;
+        const percent = Math.round((current / subject.target) * 100);
+        
+        return `
+          <div class="subject-card">
+            <div class="subject-header-row">
+              <span class="subject-name">${subject.name}</span>
+              <span class="subject-count">${current}/${subject.target}回</span>
+            </div>
+            <div class="subject-progress">
+              <div class="subject-fill ${color}" style="width: ${percent}%"></div>
+            </div>
+            <div class="subject-buttons">
+              <button class="subject-btn minus" onclick="updateProgress('${subject.id}', -1)">−</button>
+              <button class="subject-btn plus-${color}" onclick="updateProgress('${subject.id}', 1)">＋</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateProgress(subjectId, delta) {
+      const allSubjects = [...studyData.sharoushi.subjects, ...studyData.gyousei.subjects];
+      const subject = allSubjects.find(s => s.id === subjectId);
+      const current = progress[subjectId] || 0;
+      progress[subjectId] = Math.max(0, Math.min(current + delta, subject.target));
+      
+      renderSubjects();
+      updateCountdowns();
+      debouncedSave();
+    }
+
+    function switchTab(exam) {
+      selectedExam = exam;
+      document.getElementById('tab-sharoushi').className = exam === 'sharoushi' ? 'tab-btn active-blue' : 'tab-btn';
+      document.getElementById('tab-gyousei').className = exam === 'gyousei' ? 'tab-btn active-green' : 'tab-btn';
+      renderSubjects();
+    }
+
+    // ===== 初期化 =====
+    async function init() {
+      showLoading(true);
+      
+      // 静的コンテンツを先に描画
+      updatePhase();
+      renderTimeline();
+      
+      // スプレッドシートからデータを読み込み
+      await loadFromSpreadsheet();
+      
+      showLoading(false);
+    }
+
+    // ページ読み込み時に初期化
+    document.addEventListener('DOMContentLoaded', init);
+    
+    // モーダル外クリックで閉じる
+    document.getElementById('settings-modal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeSettingsModal();
+      }
+    });
+  </script>
+</body>
+</html>
