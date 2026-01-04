@@ -1286,10 +1286,11 @@
     // ===== データ定義 =====
     // デフォルトの目標回数
     const defaultTargets = {
-      sr1: 10, sr2: 8, sr3: 8, sr4: 8, sr5: 6,
-      sr6: 10, sr7: 10, sr8: 10, sr9: 6, sr10: 6,
-      gs1: 5, gs2: 5, gs3: 5, gs4: 5, gs5: 5,
-      gs6: 5, gs7: 5, gs8: 3, gs9: 2, gs10: 3
+      sr1: 11, sr2: 11, sr3: 11, sr4: 11, sr5: 11,
+      sr6: 11, sr7: 11, sr8: 11, sr9: 11, sr10: 11,
+      gs1: 11, gs2: 11, gs3: 11, gs4: 11, gs5: 11,
+      gs6: 11, gs7: 11, gs8: 11, gs9: 11, gs10: 11,
+      gs11: 52, gs12: 104
     };
     
     // カスタム目標回数（ローカルストレージから読み込み）
@@ -1326,7 +1327,9 @@
           { id: 'gs7', name: '民法', get target() { return getTarget('gs7'); } },
           { id: 'gs8', name: '商法・会社法', get target() { return getTarget('gs8'); } },
           { id: 'gs9', name: '基礎法学', get target() { return getTarget('gs9'); } },
-          { id: 'gs10', name: '一般知識', get target() { return getTarget('gs10'); } }
+          { id: 'gs10', name: '一般知識', get target() { return getTarget('gs10'); } },
+          { id: 'gs11', name: '記述式（行政法）', get target() { return getTarget('gs11'); } },
+          { id: 'gs12', name: '記述式（民法）', get target() { return getTarget('gs12'); } }
         ]
       }
     };
