@@ -752,6 +752,99 @@
       margin-bottom: 1rem;
     }
     
+    /* 目標編集モーダル */
+    .target-edit-list {
+      max-height: 50vh;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+    }
+    
+    .target-edit-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem;
+      border-bottom: 1px solid #f1f5f9;
+      gap: 1rem;
+    }
+    
+    .target-edit-item:last-child {
+      border-bottom: none;
+    }
+    
+    .target-edit-name {
+      flex: 1;
+      font-size: 0.875rem;
+      color: #334155;
+    }
+    
+    .target-edit-input {
+      width: 60px;
+      padding: 0.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.375rem;
+      text-align: center;
+      font-size: 0.875rem;
+    }
+    
+    .target-edit-input:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+    
+    .target-edit-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-left: 0.25rem;
+    }
+    
+    .edit-target-btn {
+      background: none;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.375rem;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .edit-target-btn:hover {
+      background: #f1f5f9;
+      color: #334155;
+    }
+    
+    .modal-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .modal-tab-btn {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: white;
+      color: #64748b;
+    }
+    
+    .modal-tab-btn.active-blue {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: white;
+    }
+    
+    .modal-tab-btn.active-green {
+      background: #059669;
+      border-color: #059669;
+      color: white;
+    }
+    
     /* YouTube セクション */
     .youtube-section {
       padding-bottom: 2rem;
@@ -876,6 +969,23 @@
     </div>
   </div>
 
+  <!-- 目標回数編集モーダル -->
+  <div id="target-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h3 class="modal-title">🎯 目標回数の設定</h3>
+      <p class="modal-hint">各科目の学習目標回数（分母）を設定できます。</p>
+      <div class="modal-tabs">
+        <button id="target-tab-sharoushi" class="modal-tab-btn active-blue" onclick="switchTargetTab('sharoushi')">社労士</button>
+        <button id="target-tab-gyousei" class="modal-tab-btn" onclick="switchTargetTab('gyousei')">行政書士</button>
+      </div>
+      <div id="target-edit-list" class="target-edit-list"></div>
+      <div class="modal-buttons">
+        <button class="modal-btn cancel" onclick="closeTargetModal()">キャンセル</button>
+        <button class="modal-btn save" onclick="saveTargets()">保存</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Header -->
   <header class="header">
     <div class="header-content">
@@ -885,7 +995,7 @@
             <div class="header-icon">📚</div>
             <h1>ダブル受験 進捗ダッシュボード</h1>
           </div>
-          <p class="header-sub">社労士試験 & 行政書士試験 2026年合格を目指して</p>
+          <p class="header-sub">社労士試験 & 行政書士試験 2026年合格を目指して<br>～次に目が覚めた時にやる気低下しないよう酒ではなくお茶を飲む</p>
         </div>
         <div class="sync-status" id="sync-status" onclick="openSettingsModal()" title="クリックして設定を開く">
           <div class="sync-indicator" id="sync-indicator"></div>
@@ -989,9 +1099,12 @@
         
         <!-- Subject Progress Card -->
         <div class="card" style="margin-top: 1.5rem;">
-          <h3 class="card-title">
-            <span class="card-icon">📊</span>
-            科目別 周回進捗
+          <h3 class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="display: flex; align-items: center; gap: 0.5rem;">
+              <span class="card-icon">📊</span>
+              科目別 周回進捗
+            </span>
+            <button class="edit-target-btn" onclick="openTargetModal()">🎯 目標回数を編集</button>
           </h3>
           
           <div class="tab-container">
@@ -1171,33 +1284,49 @@
     let API_URL = localStorage.getItem('dashboard_api_url') || '';
     
     // ===== データ定義 =====
+    // デフォルトの目標回数
+    const defaultTargets = {
+      sr1: 10, sr2: 8, sr3: 8, sr4: 8, sr5: 6,
+      sr6: 10, sr7: 10, sr8: 10, sr9: 6, sr10: 6,
+      gs1: 5, gs2: 5, gs3: 5, gs4: 5, gs5: 5,
+      gs6: 5, gs7: 5, gs8: 3, gs9: 2, gs10: 3
+    };
+    
+    // カスタム目標回数（ローカルストレージから読み込み）
+    let customTargets = JSON.parse(localStorage.getItem('customTargets') || '{}');
+    
+    // 目標回数を取得する関数
+    function getTarget(subjectId) {
+      return customTargets[subjectId] !== undefined ? customTargets[subjectId] : defaultTargets[subjectId];
+    }
+    
     const studyData = {
       sharoushi: {
         subjects: [
-          { id: 'sr1', name: '労働基準法', target: 10 },
-          { id: 'sr2', name: '労働安全衛生法', target: 8 },
-          { id: 'sr3', name: '労働者災害補償保険法', target: 8 },
-          { id: 'sr4', name: '雇用保険法', target: 8 },
-          { id: 'sr5', name: '労働保険徴収法', target: 6 },
-          { id: 'sr6', name: '健康保険法', target: 10 },
-          { id: 'sr7', name: '国民年金法', target: 10 },
-          { id: 'sr8', name: '厚生年金保険法', target: 10 },
-          { id: 'sr9', name: '労務管理・一般常識', target: 6 },
-          { id: 'sr10', name: '社会保険・一般常識', target: 6 }
+          { id: 'sr1', name: '労働基準法', get target() { return getTarget('sr1'); } },
+          { id: 'sr2', name: '労働安全衛生法', get target() { return getTarget('sr2'); } },
+          { id: 'sr3', name: '労働者災害補償保険法', get target() { return getTarget('sr3'); } },
+          { id: 'sr4', name: '雇用保険法', get target() { return getTarget('sr4'); } },
+          { id: 'sr5', name: '労働保険徴収法', get target() { return getTarget('sr5'); } },
+          { id: 'sr6', name: '健康保険法', get target() { return getTarget('sr6'); } },
+          { id: 'sr7', name: '国民年金法', get target() { return getTarget('sr7'); } },
+          { id: 'sr8', name: '厚生年金保険法', get target() { return getTarget('sr8'); } },
+          { id: 'sr9', name: '労務管理・一般常識', get target() { return getTarget('sr9'); } },
+          { id: 'sr10', name: '社会保険・一般常識', get target() { return getTarget('sr10'); } }
         ]
       },
       gyousei: {
         subjects: [
-          { id: 'gs1', name: '憲法', target: 5 },
-          { id: 'gs2', name: '行政法総論', target: 5 },
-          { id: 'gs3', name: '行政手続法', target: 5 },
-          { id: 'gs4', name: '行政不服審査法', target: 5 },
-          { id: 'gs5', name: '行政事件訴訟法', target: 5 },
-          { id: 'gs6', name: '国家賠償法・地方自治法', target: 5 },
-          { id: 'gs7', name: '民法', target: 5 },
-          { id: 'gs8', name: '商法・会社法', target: 3 },
-          { id: 'gs9', name: '基礎法学', target: 2 },
-          { id: 'gs10', name: '一般知識', target: 3 }
+          { id: 'gs1', name: '憲法', get target() { return getTarget('gs1'); } },
+          { id: 'gs2', name: '行政法総論', get target() { return getTarget('gs2'); } },
+          { id: 'gs3', name: '行政手続法', get target() { return getTarget('gs3'); } },
+          { id: 'gs4', name: '行政不服審査法', get target() { return getTarget('gs4'); } },
+          { id: 'gs5', name: '行政事件訴訟法', get target() { return getTarget('gs5'); } },
+          { id: 'gs6', name: '国家賠償法・地方自治法', get target() { return getTarget('gs6'); } },
+          { id: 'gs7', name: '民法', get target() { return getTarget('gs7'); } },
+          { id: 'gs8', name: '商法・会社法', get target() { return getTarget('gs8'); } },
+          { id: 'gs9', name: '基礎法学', get target() { return getTarget('gs9'); } },
+          { id: 'gs10', name: '一般知識', get target() { return getTarget('gs10'); } }
         ]
       }
     };
@@ -1257,6 +1386,78 @@
         updateSyncStatus('offline', 'ローカルモード');
         showToast('ローカルモードで動作します', '');
       }
+    }
+
+    // ===== 目標編集モーダル =====
+    let targetEditExam = 'sharoushi';
+    
+    function openTargetModal() {
+      targetEditExam = selectedExam;
+      renderTargetEditList();
+      updateTargetTabs();
+      document.getElementById('target-modal').classList.remove('hidden');
+    }
+    
+    function closeTargetModal() {
+      document.getElementById('target-modal').classList.add('hidden');
+    }
+    
+    function switchTargetTab(exam) {
+      targetEditExam = exam;
+      updateTargetTabs();
+      renderTargetEditList();
+    }
+    
+    function updateTargetTabs() {
+      document.getElementById('target-tab-sharoushi').className = 
+        targetEditExam === 'sharoushi' ? 'modal-tab-btn active-blue' : 'modal-tab-btn';
+      document.getElementById('target-tab-gyousei').className = 
+        targetEditExam === 'gyousei' ? 'modal-tab-btn active-green' : 'modal-tab-btn';
+    }
+    
+    function renderTargetEditList() {
+      const container = document.getElementById('target-edit-list');
+      const subjects = studyData[targetEditExam].subjects;
+      
+      container.innerHTML = subjects.map(subject => {
+        const currentTarget = getTarget(subject.id);
+        return `
+          <div class="target-edit-item">
+            <span class="target-edit-name">${subject.name}</span>
+            <div>
+              <input type="number" 
+                     class="target-edit-input" 
+                     id="target-input-${subject.id}" 
+                     value="${currentTarget}" 
+                     min="1" 
+                     max="99">
+              <span class="target-edit-label">回</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function saveTargets() {
+      const subjects = [...studyData.sharoushi.subjects, ...studyData.gyousei.subjects];
+      
+      subjects.forEach(subject => {
+        const input = document.getElementById('target-input-' + subject.id);
+        if (input) {
+          const value = parseInt(input.value, 10);
+          if (value && value > 0) {
+            customTargets[subject.id] = value;
+          }
+        }
+      });
+      
+      // ローカルストレージに保存
+      localStorage.setItem('customTargets', JSON.stringify(customTargets));
+      
+      closeTargetModal();
+      renderSubjects();
+      updateCountdowns();
+      showToast('目標回数を保存しました', 'success');
     }
 
     // ===== 同期関連 =====
@@ -1586,6 +1787,12 @@
     document.getElementById('settings-modal').addEventListener('click', function(e) {
       if (e.target === this) {
         closeSettingsModal();
+      }
+    });
+    
+    document.getElementById('target-modal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeTargetModal();
       }
     });
   </script>
